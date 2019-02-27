@@ -29,12 +29,12 @@ from collections import OrderedDict
 
 __author__="Alexey Shaytan"
 
-TEMP='/Users/alexeyshaytan/junk/tmp2/'
-P_X3DNA_DIR='/Users/alexeyshaytan/soft/x3dna-v2.1'
-P_X3DNA_analyze=P_X3DNA_DIR+'/bin/analyze'
-P_X3DNA_find_pair=P_X3DNA_DIR+'/bin/find_pair'
-P_X3DNA_rebuild=P_X3DNA_DIR+'/bin/rebuild'
-P_X3DNA_x3dna_utils=P_X3DNA_DIR+'/bin/x3dna_utils'
+TEMP='/tmp/'
+#P_X3DNA_DIR='/Users/alexeyshaytan/soft/x3dna-v2.1'
+P_X3DNA_analyze='analyze'
+P_X3DNA_find_pair='find_pair'
+P_X3DNA_rebuild='rebuild'
+P_X3DNA_x3dna_utils='x3dna_utils'
 
 
 P_CURVES='/Users/alexeyshaytan/bin/Cur+'

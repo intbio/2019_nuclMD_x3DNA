@@ -1,0 +1,84 @@
+#Run as vmd -dispdev text -python -e analyzeMD.vmdpy
+
+import os
+os.environ['MPLBACKEND']="PS"
+
+from VMD import *
+from Molecule import *
+from atomsel import *
+from animate import *
+
+import pandas as pd
+import numpy as np
+import sys
+
+
+from dna_param import X3DNA_find_pair,X3DNA_analyze
+
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from Bio.Align import MultipleSeqAlignment
+
+import time
+from multiprocessing import Process, Manager
+
+sum_df=pd.DataFrame() 
+
+PARALLEL=True
+
+mol=Molecule()
+
+mol.load("only_nucl_init.psf")
+mol.load("only_nucl_init.pdb")
+mol.load("md.dcd",first=1,step=1,last=10)
+
+nf=mol.numFrames()
+
+DNA=atomsel("nucleic ",molid=0)
+conv_res={'CYT':'DC','GUA':'DG','THY':'DT','ADE':'DA'}
+DNA.set('resname',[conv_res.get(i,i) for i in DNA.get('resname')])
+DNA.set('chain',[i[2:] for i in DNA.get('segname')])
+
+reff=X3DNA_find_pair(DNA)
+
+manager = Manager()
+return_dict = manager.dict()
+jobs = []
+def worker(frame,sel, return_dict):
+	'''worker function'''
+	print "Starting frame ",frame
+	return_dict[frame]=X3DNA_analyze(DNA,reff)
+
+if PARALLEL:
+	for i in range(1,nf):
+		goto(i)
+		p=Process(target=worker, args=(i,DNA,return_dict))
+		jobs.append(p)
+		p.start()
+		time.sleep(2)
+
+	for proc in jobs:
+		print "Waiting for ",proc
+		proc.join()
+else:
+	for i in range(1,nf):
+		goto(i)
+		print "Frame",i
+		worker(i,DNA,return_dict)
+
+
+
+for i in range(1,nf):
+	df=return_dict[i]
+	df=df.reset_index()
+	ind=pd.DataFrame({'BP':range(-73,74)})
+	df2=pd.concat([df,ind],axis=1)
+	df2['Time']=i
+	sum_df=pd.concat([sum_df,df2])
+
+sum_df.to_csv('MD_DNAparam_1kx5.csv')
+
+gv=sum_df.groupby(['BP']).agg(np.mean)
+gv.to_csv('MD_DNAparam_avr_1kx5.csv')
+
+exit()
